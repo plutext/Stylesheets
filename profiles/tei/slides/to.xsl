@@ -94,9 +94,10 @@ of this software, even if advised of the possibility of such damage.
 \let\endlastfoot\relax
 \parskip3pt
 \setbeamertemplate{footline}
-{\hspace{1em}\includegraphics[height=10ex]{<xsl:value-of select="$logoFile"/>} \hspace{2em}
-\hfill \textcolor{gray}{\insertframenumber/\inserttotalframenumber}
-\vspace{1em}}
+{\hspace{1em}
+\textcolor{gray}{\insertframenumber/\inserttotalframenumber}
+\vspace{1em}\hfill
+\includegraphics[height=10ex]{<xsl:value-of select="$logoFile"/>} \hspace{2em}}
 </xsl:template>
 <xsl:template match="tei:gi">
   <xsl:text>{\color{blue2}&lt;</xsl:text>
