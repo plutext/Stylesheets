@@ -121,7 +121,15 @@
 				<table>
 					<xsl:call-template name="table-rendition" />
 					<xsl:call-template name="table-header" />
-					<xsl:for-each select="w:tr">
+					
+					<xsl:apply-templates select="w:tr" mode="paragraph" />
+					
+				</table>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
+	<xsl:template match="w:tr" mode="paragraph">
 						<xsl:variable name="overrideRow">
 							<xsl:choose>
 								<xsl:when test="not(preceding-sibling::w:tr)">
@@ -133,7 +141,15 @@
 							</xsl:choose>
 						</xsl:variable>
 						<row>
-							<xsl:for-each select="w:tc">
+							<xsl:apply-templates select="w:tc" mode="paragraph" >
+								<xsl:with-param name="overrideRow" select="$overrideRow"/> 
+							</xsl:apply-templates>
+						</row>
+</xsl:template>	
+
+	<xsl:template match="w:tc" mode="paragraph">
+		<xsl:param name="overrideRow" />
+	
 								<xsl:variable name="overrideColumn">
 									<xsl:choose>
 										<xsl:when test="not(preceding-sibling::w:tc)">
@@ -144,7 +160,7 @@
 										</xsl:when>
 									</xsl:choose>
 								</xsl:variable>
-								<cell>
+								<cell> 
 									<xsl:if test="$preserveEffects='true'">
 										<xsl:attribute name="tei:align">
 										   <xsl:choose>
@@ -201,13 +217,9 @@
 											tunnel="yes" />
 									</xsl:call-template>
 								</cell>
-							</xsl:for-each>
-						</row>
-					</xsl:for-each>
-				</table>
-			</xsl:otherwise>
-		</xsl:choose>
-	</xsl:template>
+
+</xsl:template>	
+
 
 	<xsl:template match="*" mode="insideCalsTable">
 		<xsl:copy>
