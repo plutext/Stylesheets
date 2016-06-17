@@ -114,288 +114,10 @@
 					<xsl:apply-templates />
 				</xsl:copy>
 			</xsl:when>
-			<xsl:when test="$tableMethod='cals'">
-				<!-- preprocess the table to expand colspans, add row numbers, and simplify 
-					vertical merge info -->
-
-				<xsl:variable name="TABLE">
-
-					<xsl:variable name="tableBorders">
-						<xsl:choose>
-							<xsl:when test="w:tblPr/w:tblBorders/w:top[@w:val='single']">
-								<xsl:copy-of select="w:tblPr/w:tblBorders/w:top" />
-							</xsl:when>
-							<xsl:when
-								test=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:top[@w:val='single']">
-								<xsl:copy-of select=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:top" />
-							</xsl:when>
-						</xsl:choose>
-						<xsl:choose>
-							<xsl:when test="w:tblPr/w:tblBorders/w:left[@w:val='single']">
-								<xsl:copy-of select="w:tblPr/w:tblBorders/w:left" />
-							</xsl:when>
-							<xsl:when
-								test=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:val='single']">
-								<xsl:copy-of select=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left" />
-							</xsl:when>
-						</xsl:choose>
-						<xsl:choose>
-							<xsl:when test="w:tblPr/w:tblBorders/w:bottom[@w:val='single']">
-								<xsl:copy-of select="w:tblPr/w:tblBorders/w:bottom" />
-							</xsl:when>
-							<xsl:when
-								test=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:bottom[@w:val='single']">
-								<xsl:copy-of
-									select=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:bottom" />
-							</xsl:when>
-						</xsl:choose>
-						<xsl:choose>
-							<xsl:when test="w:tblPr/w:tblBorders/w:right[@w:val='single']">
-								<xsl:copy-of select="w:tblPr/w:tblBorders/w:right" />
-							</xsl:when>
-							<xsl:when
-								test=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right[@w:val='single']">
-								<xsl:copy-of
-									select=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right" />
-							</xsl:when>
-						</xsl:choose>
-					</xsl:variable>
-					<xsl:variable name="tableBorderStyles">
-						<xsl:call-template name="getTableBorderStyles">
-							<xsl:with-param name="tblBorders" select="$tableBorders" />
-						</xsl:call-template>
-					</xsl:variable>
-					<table xmlns="http://www.oasis-open.org/specs/tm9901">
-						<xsl:if test="normalize-space($tableBorderStyles)!=''">
-							<xsl:attribute name="iso:style">
-				   <xsl:value-of select="normalize-space($tableBorderStyles)" />
-				 </xsl:attribute>
-						</xsl:if>
-						<xsl:attribute name="frame">
-		                   <xsl:choose>
-		      <!-- lets face it, most tables do have
-			   borders, especially in ISO; but not in footers! -->
-		      <xsl:when
-							test="not(w:tblPr/w:tblBorders) and
-				      parent::w:ftr">
-			                        <xsl:text>none</xsl:text>
-		                      </xsl:when>
-		                      <xsl:when test="not($tableBorders)">
-					<!-- if really no info on borders, default 
-					     to all (? is this really what we want?) -->
-					<xsl:text>all</xsl:text>
-		                      </xsl:when>
-		                      <xsl:otherwise>
-					<xsl:for-each select="$tableBorders">
-					  <xsl:choose>
-					    <xsl:when
-							test="    w:top/@w:val='single'
-							    and w:bottom/@w:val='single'
-							    and w:right/@w:val='single'        
-							    and w:left/@w:val='single'">all</xsl:when>
-					    <xsl:when
-							test="    w:top/@w:val='single' 
-							    and w:bottom/@w:val='single'
-							    and not(w:right/@w:val='single') 
-							    and not(w:left/@w:val='single')">topbot</xsl:when>
-					    <xsl:when
-							test="    w:top/@w:val='single' 
-							    and not(w:bottom/@w:val='single') 
-							    and not(w:right/@w:val='single') 
-							    and not(w:left/@w:val='single')">top</xsl:when>
-					    <xsl:when
-							test="    not(w:top/@w:val='single') 
-							    and w:bottom/@w:val='single' 
-							    and not(w:right/@w:val='single') 
-							    and not(w:left/@w:val='single')">bottom</xsl:when>
-					    <xsl:when
-							test="    not(w:top/@w:val='single') 
-							    and not(w:bottom/@w:val='single') 
-							    and w:right/@w:val='single' 
-							    and w:left/@w:val='single'">sides</xsl:when>
-					    <xsl:otherwise>
-					      <!-- start guessing -->
-					      <xsl:variable name="sideBorders">
-						<xsl:choose>
-						  <xsl:when
-							test="w:left/@w:val='single' 
-								  or w:right/@w:val='single'
-								  or ../../w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:val='single']
-								  or ../../w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right[@w:val='single']">true</xsl:when> 
-						  <xsl:otherwise>false</xsl:otherwise>
-						</xsl:choose>
-					      </xsl:variable>
-					      <xsl:choose>
-						<xsl:when
-							test="$sideBorders='true'
-								and(w:bottom/@w:val='single' or w:top/@w:val='single')">all</xsl:when>
-						<xsl:otherwise>
-						  <xsl:text>none</xsl:text>
-						</xsl:otherwise>
-					      </xsl:choose>
-					    </xsl:otherwise>
-					  </xsl:choose>
-					</xsl:for-each>
-		                      </xsl:otherwise>
-		                   </xsl:choose>
-		                </xsl:attribute>
-						<xsl:attribute name="colsep">
-		                   <xsl:choose>
-		                      <xsl:when
-							test="w:tblPr/w:tblBorders/w:insideV/@w:val='single'">1</xsl:when>
-		                      <xsl:otherwise>0</xsl:otherwise>
-		                   </xsl:choose>
-		                </xsl:attribute>
-						<xsl:attribute name="rowsep">
-		                   <xsl:choose>
-		                      <xsl:when
-							test="w:tblPr/w:tblBorders/w:insideH/@w:val='single'">1</xsl:when>
-		                      <xsl:otherwise>0</xsl:otherwise>
-		                   </xsl:choose>
-		                </xsl:attribute>
-						<xsl:call-template name="cals-table-header" />
-						<tgroup>
-							<xsl:for-each select="w:tblGrid/w:gridCol">
-								<colspec colnum="{position()}" colname="c{position()}">
-									<xsl:attribute name="colwidth"
-										select="concat(number(@w:w) div 20,'pt')" />
-								</colspec>
-							</xsl:for-each>
-							<tbody>
-								<xsl:for-each select="w:tr">
-									<xsl:copy>
-										<xsl:variable name="ROWPOS">
-											<xsl:number />
-										</xsl:variable>
-										<xsl:for-each select="w:tc">
-											<xsl:variable name="cellBorderStyles">
-												<xsl:choose>
-													<xsl:when test="w:tcBorders">
-														<xsl:call-template name="getTableBorderStyles">
-															<xsl:with-param name="tblBorders" select="w:tcBorders" />
-														</xsl:call-template>
-													</xsl:when>
-													<xsl:when test="w:tcPr/w:tcBorders">
-														<xsl:call-template name="getTableBorderStyles">
-															<xsl:with-param name="tblBorders" select="w:tcPr/w:tcBorders" />
-														</xsl:call-template>
-													</xsl:when>
-												</xsl:choose>
-											</xsl:variable>
-											<xsl:variable name="VMERGE">
-												<xsl:choose>
-													<xsl:when test="w:tcPr/w:vMerge/@w:val='restart'">
-														<xsl:text>start</xsl:text>
-													</xsl:when>
-													<xsl:when test="w:tcPr[not(w:vMerge)]">
-														<xsl:text>start</xsl:text>
-													</xsl:when>
-													<xsl:otherwise>
-														<xsl:text>continue</xsl:text>
-													</xsl:otherwise>
-												</xsl:choose>
-											</xsl:variable>
-											<xsl:variable name="innards">
-												<xsl:copy-of select="w:tcPr" />
-											</xsl:variable>
-											<xsl:copy>
-												<xsl:variable name="N" select="position()" />
-												<xsl:if test="normalize-space($cellBorderStyles)!=''">
-													<xsl:attribute name="iso:style">
-							     <xsl:value-of select="normalize-space($cellBorderStyles)" />
-							   </xsl:attribute>
-												</xsl:if>
-												<xsl:attribute name="rowsep">
-				                                   <xsl:choose>
-				                                      <xsl:when
-													test="w:tcPr/w:tcBorders/w:bottom[@w:sz=0 or @w:val='nil']">
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="w:tcPr/w:tcBorders/w:bottom[@w:sz&gt;0]">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="parent::w:tr/following-sibling::w:tr[1]/w:tc[$N]/w:tcPr/w:tcBorders/w:top[@w:sz&gt;0]">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideH[@w:sz=0          or @w:val='nil']">
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideH">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="not(parent::w:tr/following-sibling::w:tr)          and not(ancestor::w:ftr)">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:otherwise>
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:otherwise>
-				                                   </xsl:choose>
-			                                 </xsl:attribute>
-												<xsl:attribute name="colsep">
-				                                   <xsl:choose>
-				                                      <xsl:when
-													test="following-sibling::w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:sz&gt;0]">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="w:tcPr/w:tcBorders/w:right[@w:sz=0 or @w:val='nil']">
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="w:tcPr/w:tcBorders/w:right[@w:sz&gt;0]">
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideV[@w:sz=0          or @w:val='nil']">
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:when
-													test="not(ancestor::w:tbl/w:tblPr/w:tblBorders)          and ancestor::w:ftr">
-				                                         <xsl:text>0</xsl:text>
-				                                      </xsl:when>
-				                                      <xsl:otherwise>
-				                                         <xsl:text>1</xsl:text>
-				                                      </xsl:otherwise>
-				                                   </xsl:choose>
-			                                 </xsl:attribute>
-												<xsl:attribute name="ROWPOS" select="$ROWPOS" />
-												<xsl:attribute name="VMERGE" select="$VMERGE" />
-												<xsl:copy-of select="@*" />
-												<xsl:copy-of select="*" />
-											</xsl:copy>
-											<xsl:if test="w:tcPr/w:gridSpan/@w:val">
-												<xsl:variable name="N"
-													select="number(w:tcPr/w:gridSpan/@w:val)           cast as xs:integer" />
-												<xsl:for-each select="2 to $N">
-													<w:tc DUMMY="yes">
-														<xsl:copy-of select="$innards" />
-													</w:tc>
-												</xsl:for-each>
-											</xsl:if>
-										</xsl:for-each>
-									</xsl:copy>
-								</xsl:for-each>
-							</tbody>
-						</tgroup>
-					</table>
-					<!-- <xsl:comment>START</xsl:comment> <TABLE> <xsl:copy-of select="$TABLE"/> 
-						</TABLE> <xsl:comment>END</xsl:comment> -->
-				</xsl:variable>
-				<xsl:variable name="n">
-					<xsl:number level="any" />
-				</xsl:variable>
-				<xsl:for-each select="$TABLE">
-					<xsl:apply-templates mode="insideCalsTable">
-						<xsl:with-param name="n" select="$n" tunnel="yes" />
-					</xsl:apply-templates>
-				</xsl:for-each>
+			<xsl:when test="$tableMethod='cals'"> <!-- not used? -->
+				<xsl:call-template name="cals-table" />
 			</xsl:when>
-			<xsl:otherwise>
+			<xsl:otherwise> <!--  usual program flow -->
 				<table>
 					<xsl:call-template name="table-rendition" />
 					<xsl:call-template name="table-header" />
@@ -692,4 +414,288 @@
 			</xsl:if>
 		</xsl:for-each>
 	</xsl:function>
+	
+	<xsl:template name="cals-table">
+				<!-- preprocess the table to expand colspans, add row numbers, and simplify 
+					vertical merge info -->
+
+				<xsl:variable name="TABLE">
+
+					<xsl:variable name="tableBorders">
+						<xsl:choose>
+							<xsl:when test="w:tblPr/w:tblBorders/w:top[@w:val='single']">
+								<xsl:copy-of select="w:tblPr/w:tblBorders/w:top" />
+							</xsl:when>
+							<xsl:when
+								test=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:top[@w:val='single']">
+								<xsl:copy-of select=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:top" />
+							</xsl:when>
+						</xsl:choose>
+						<xsl:choose>
+							<xsl:when test="w:tblPr/w:tblBorders/w:left[@w:val='single']">
+								<xsl:copy-of select="w:tblPr/w:tblBorders/w:left" />
+							</xsl:when>
+							<xsl:when
+								test=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:val='single']">
+								<xsl:copy-of select=".//w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left" />
+							</xsl:when>
+						</xsl:choose>
+						<xsl:choose>
+							<xsl:when test="w:tblPr/w:tblBorders/w:bottom[@w:val='single']">
+								<xsl:copy-of select="w:tblPr/w:tblBorders/w:bottom" />
+							</xsl:when>
+							<xsl:when
+								test=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:bottom[@w:val='single']">
+								<xsl:copy-of
+									select=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:bottom" />
+							</xsl:when>
+						</xsl:choose>
+						<xsl:choose>
+							<xsl:when test="w:tblPr/w:tblBorders/w:right[@w:val='single']">
+								<xsl:copy-of select="w:tblPr/w:tblBorders/w:right" />
+							</xsl:when>
+							<xsl:when
+								test=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right[@w:val='single']">
+								<xsl:copy-of
+									select=".//w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right" />
+							</xsl:when>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:variable name="tableBorderStyles">
+						<xsl:call-template name="getTableBorderStyles">
+							<xsl:with-param name="tblBorders" select="$tableBorders" />
+						</xsl:call-template>
+					</xsl:variable>
+					<table xmlns="http://www.oasis-open.org/specs/tm9901">
+						<xsl:if test="normalize-space($tableBorderStyles)!=''">
+							<xsl:attribute name="iso:style">
+				   <xsl:value-of select="normalize-space($tableBorderStyles)" />
+				 </xsl:attribute>
+						</xsl:if>
+						<xsl:attribute name="frame">
+		                   <xsl:choose>
+		      <!-- lets face it, most tables do have
+			   borders, especially in ISO; but not in footers! -->
+		      <xsl:when
+							test="not(w:tblPr/w:tblBorders) and
+				      parent::w:ftr">
+			                        <xsl:text>none</xsl:text>
+		                      </xsl:when>
+		                      <xsl:when test="not($tableBorders)">
+					<!-- if really no info on borders, default 
+					     to all (? is this really what we want?) -->
+					<xsl:text>all</xsl:text>
+		                      </xsl:when>
+		                      <xsl:otherwise>
+					<xsl:for-each select="$tableBorders">
+					  <xsl:choose>
+					    <xsl:when
+							test="    w:top/@w:val='single'
+							    and w:bottom/@w:val='single'
+							    and w:right/@w:val='single'        
+							    and w:left/@w:val='single'">all</xsl:when>
+					    <xsl:when
+							test="    w:top/@w:val='single' 
+							    and w:bottom/@w:val='single'
+							    and not(w:right/@w:val='single') 
+							    and not(w:left/@w:val='single')">topbot</xsl:when>
+					    <xsl:when
+							test="    w:top/@w:val='single' 
+							    and not(w:bottom/@w:val='single') 
+							    and not(w:right/@w:val='single') 
+							    and not(w:left/@w:val='single')">top</xsl:when>
+					    <xsl:when
+							test="    not(w:top/@w:val='single') 
+							    and w:bottom/@w:val='single' 
+							    and not(w:right/@w:val='single') 
+							    and not(w:left/@w:val='single')">bottom</xsl:when>
+					    <xsl:when
+							test="    not(w:top/@w:val='single') 
+							    and not(w:bottom/@w:val='single') 
+							    and w:right/@w:val='single' 
+							    and w:left/@w:val='single'">sides</xsl:when>
+					    <xsl:otherwise>
+					      <!-- start guessing -->
+					      <xsl:variable name="sideBorders">
+						<xsl:choose>
+						  <xsl:when
+							test="w:left/@w:val='single' 
+								  or w:right/@w:val='single'
+								  or ../../w:tr[1]/w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:val='single']
+								  or ../../w:tr[last()]/w:tc[last()]/w:tcPr/w:tcBorders/w:right[@w:val='single']">true</xsl:when> 
+						  <xsl:otherwise>false</xsl:otherwise>
+						</xsl:choose>
+					      </xsl:variable>
+					      <xsl:choose>
+						<xsl:when
+							test="$sideBorders='true'
+								and(w:bottom/@w:val='single' or w:top/@w:val='single')">all</xsl:when>
+						<xsl:otherwise>
+						  <xsl:text>none</xsl:text>
+						</xsl:otherwise>
+					      </xsl:choose>
+					    </xsl:otherwise>
+					  </xsl:choose>
+					</xsl:for-each>
+		                      </xsl:otherwise>
+		                   </xsl:choose>
+		                </xsl:attribute>
+						<xsl:attribute name="colsep">
+		                   <xsl:choose>
+		                      <xsl:when
+							test="w:tblPr/w:tblBorders/w:insideV/@w:val='single'">1</xsl:when>
+		                      <xsl:otherwise>0</xsl:otherwise>
+		                   </xsl:choose>
+		                </xsl:attribute>
+						<xsl:attribute name="rowsep">
+		                   <xsl:choose>
+		                      <xsl:when
+							test="w:tblPr/w:tblBorders/w:insideH/@w:val='single'">1</xsl:when>
+		                      <xsl:otherwise>0</xsl:otherwise>
+		                   </xsl:choose>
+		                </xsl:attribute>
+						<xsl:call-template name="cals-table-header" />
+						<tgroup>
+							<xsl:for-each select="w:tblGrid/w:gridCol">
+								<colspec colnum="{position()}" colname="c{position()}">
+									<xsl:attribute name="colwidth"
+										select="concat(number(@w:w) div 20,'pt')" />
+								</colspec>
+							</xsl:for-each>
+							<tbody>
+								<xsl:for-each select="w:tr">
+									<xsl:copy>
+										<xsl:variable name="ROWPOS">
+											<xsl:number />
+										</xsl:variable>
+										<xsl:for-each select="w:tc">
+											<xsl:variable name="cellBorderStyles">
+												<xsl:choose>
+													<xsl:when test="w:tcBorders">
+														<xsl:call-template name="getTableBorderStyles">
+															<xsl:with-param name="tblBorders" select="w:tcBorders" />
+														</xsl:call-template>
+													</xsl:when>
+													<xsl:when test="w:tcPr/w:tcBorders">
+														<xsl:call-template name="getTableBorderStyles">
+															<xsl:with-param name="tblBorders" select="w:tcPr/w:tcBorders" />
+														</xsl:call-template>
+													</xsl:when>
+												</xsl:choose>
+											</xsl:variable>
+											<xsl:variable name="VMERGE">
+												<xsl:choose>
+													<xsl:when test="w:tcPr/w:vMerge/@w:val='restart'">
+														<xsl:text>start</xsl:text>
+													</xsl:when>
+													<xsl:when test="w:tcPr[not(w:vMerge)]">
+														<xsl:text>start</xsl:text>
+													</xsl:when>
+													<xsl:otherwise>
+														<xsl:text>continue</xsl:text>
+													</xsl:otherwise>
+												</xsl:choose>
+											</xsl:variable>
+											<xsl:variable name="innards">
+												<xsl:copy-of select="w:tcPr" />
+											</xsl:variable>
+											<xsl:copy>
+												<xsl:variable name="N" select="position()" />
+												<xsl:if test="normalize-space($cellBorderStyles)!=''">
+													<xsl:attribute name="iso:style">
+							     <xsl:value-of select="normalize-space($cellBorderStyles)" />
+							   </xsl:attribute>
+												</xsl:if>
+												<xsl:attribute name="rowsep">
+				                                   <xsl:choose>
+				                                      <xsl:when
+													test="w:tcPr/w:tcBorders/w:bottom[@w:sz=0 or @w:val='nil']">
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="w:tcPr/w:tcBorders/w:bottom[@w:sz&gt;0]">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="parent::w:tr/following-sibling::w:tr[1]/w:tc[$N]/w:tcPr/w:tcBorders/w:top[@w:sz&gt;0]">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideH[@w:sz=0          or @w:val='nil']">
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideH">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="not(parent::w:tr/following-sibling::w:tr)          and not(ancestor::w:ftr)">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:otherwise>
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:otherwise>
+				                                   </xsl:choose>
+			                                 </xsl:attribute>
+												<xsl:attribute name="colsep">
+				                                   <xsl:choose>
+				                                      <xsl:when
+													test="following-sibling::w:tc[1]/w:tcPr/w:tcBorders/w:left[@w:sz&gt;0]">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="w:tcPr/w:tcBorders/w:right[@w:sz=0 or @w:val='nil']">
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="w:tcPr/w:tcBorders/w:right[@w:sz&gt;0]">
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="ancestor::w:tbl/w:tblPr/w:tblBorders/w:insideV[@w:sz=0          or @w:val='nil']">
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:when
+													test="not(ancestor::w:tbl/w:tblPr/w:tblBorders)          and ancestor::w:ftr">
+				                                         <xsl:text>0</xsl:text>
+				                                      </xsl:when>
+				                                      <xsl:otherwise>
+				                                         <xsl:text>1</xsl:text>
+				                                      </xsl:otherwise>
+				                                   </xsl:choose>
+			                                 </xsl:attribute>
+												<xsl:attribute name="ROWPOS" select="$ROWPOS" />
+												<xsl:attribute name="VMERGE" select="$VMERGE" />
+												<xsl:copy-of select="@*" />
+												<xsl:copy-of select="*" />
+											</xsl:copy>
+											<xsl:if test="w:tcPr/w:gridSpan/@w:val">
+												<xsl:variable name="N"
+													select="number(w:tcPr/w:gridSpan/@w:val)           cast as xs:integer" />
+												<xsl:for-each select="2 to $N">
+													<w:tc DUMMY="yes">
+														<xsl:copy-of select="$innards" />
+													</w:tc>
+												</xsl:for-each>
+											</xsl:if>
+										</xsl:for-each>
+									</xsl:copy>
+								</xsl:for-each>
+							</tbody>
+						</tgroup>
+					</table>
+					<!-- <xsl:comment>START</xsl:comment> <TABLE> <xsl:copy-of select="$TABLE"/> 
+						</TABLE> <xsl:comment>END</xsl:comment> -->
+				</xsl:variable>
+				<xsl:variable name="n">
+					<xsl:number level="any" />
+				</xsl:variable>
+				<xsl:for-each select="$TABLE">
+					<xsl:apply-templates mode="insideCalsTable">
+						<xsl:with-param name="n" select="$n" tunnel="yes" />
+					</xsl:apply-templates>
+				</xsl:for-each>
+
+	</xsl:template>
+	
 </xsl:stylesheet>
