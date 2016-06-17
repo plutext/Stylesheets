@@ -128,187 +128,191 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+
 	
 	<xsl:template match="w:tr" mode="paragraph">
+
+		<xsl:variable name="overrideRow">
+			<xsl:choose>
+				<xsl:when test="not(preceding-sibling::w:tr)">
+					<xsl:copy-of select="tei:extrapolateTableFirstRow(.)" />
+				</xsl:when>
+				<xsl:when test="not(following-sibling::w:tr)">
+					<xsl:copy-of select="tei:extrapolateTableLastRow(.)" />
+				</xsl:when>
+			</xsl:choose>
+		</xsl:variable>
+		<row>
+			<xsl:apply-templates select="w:tc[not(w:tcPr/w:vMerge[not(@w:val='restart')])]|w:sdt" mode="paragraph" >
+				<xsl:with-param name="overrideRow" select="$overrideRow"/> 
+			</xsl:apply-templates>
+		</row>
+		
+	</xsl:template>	
 	
-	
-						<xsl:variable name="overrideRow">
-							<xsl:choose>
-								<xsl:when test="not(preceding-sibling::w:tr)">
-									<xsl:copy-of select="tei:extrapolateTableFirstRow(.)" />
-								</xsl:when>
-								<xsl:when test="not(following-sibling::w:tr)">
-									<xsl:copy-of select="tei:extrapolateTableLastRow(.)" />
-								</xsl:when>
-							</xsl:choose>
-						</xsl:variable>
-						<row>
-							<xsl:apply-templates select="w:tc[not(w:tcPr/w:vMerge[not(@w:val='restart')])]|w:sdt" mode="paragraph" >
-								<xsl:with-param name="overrideRow" select="$overrideRow"/> 
-							</xsl:apply-templates>
-						</row>
-</xsl:template>	
 
 	<xsl:template match="w:tc" mode="paragraph">
 		<xsl:param name="overrideRow" />
-			<xsl:variable name="rowSpanApproach" select="string('ottoville')" /> <!--  or 'ms' -->
+		<xsl:variable name="rowSpanApproach" select="string('ottoville')" /> <!--  or 'ms' -->
 	
-								<xsl:variable name="overrideColumn">
-									<xsl:choose>
-										<xsl:when test="not(preceding-sibling::w:tc)">
-											<xsl:copy-of select="tei:extrapolateTableFirstColumn(.)" />
-										</xsl:when>
-										<xsl:when test="not(following-sibling::w:tc)">
-											<xsl:copy-of select="tei:extrapolateTableLastColumn(.)" />
-										</xsl:when>
-									</xsl:choose>
-								</xsl:variable>
-								<cell> <!--   foo="{count($overrideRow)}" -->
-									<xsl:attribute name="rowSpanApproach" select="$rowSpanApproach" /> <!--  TEMP attribute -->
-									<xsl:if test="$preserveEffects='true'">
-										<xsl:attribute name="tei:align">
-										   <xsl:choose>
-										     <xsl:when test="w:p/w:pPr/w:jc">
-										     	<xsl:value-of select="w:p[1]/w:pPr/w:jc/@w:val" />
-										     </xsl:when>
-										     <xsl:when test="$overrideRow/w:pPr/w:jc">
-										<xsl:value-of select="$overrideRow/w:pPr/w:jc/@w:val" />
-										     </xsl:when>
-										     <xsl:when test="$overrideColumn/w:pPr/w:jc">
-										<xsl:value-of select="$overrideColumn/w:pPr/w:jc/@w:val" />
-										     </xsl:when>
-										     <xsl:otherwise>
-										<xsl:text>left</xsl:text>
-										     </xsl:otherwise>
-										   </xsl:choose>
-										 </xsl:attribute>
-									</xsl:if>
-									
-									<!--  rowspan, using ottoville approach -->
-									<xsl:if test="$rowSpanApproach='ottoville'
-														and w:tcPr/w:vMerge[@w:val='restart']">
-									
-										<!-- Calculate cell index with combined cells -->
-										<!--  NB, per http://webapp.docx4java.org/OnlineDemo/ecma376/WordML/hMerge.html
-										
-										 	  hmerge is maintained for compatibility with legacy word processing documents which defined tables in this manner. 
-										 	  Whenever possible, this form or horizontal merges should not be produced, and should be translated to the appropriate 
-										 	  gridSpan settings on the table cells instead.
-										 	  
-										 	  So we might need to hmerge as well?
-										 -->
-										<xsl:variable name="celindex" 
-														select="count(current()/preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
-																+sum(current()/preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)" />
-										
-										<!-- How many combined rows have so far -->
-										<xsl:variable name="restartindex" 
-														select="count(current()/../preceding-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
-																+sum(current()/../preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex]/w:tcPr/w:vMerge[@w:val='restart'])" />
-										
-										<!-- Apply rowspan attribute -->
-										<xsl:attribute name="rows" 
-														select="count(current()/../following-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
-																+sum(preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex][count(../preceding-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])+sum(preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex]/w:tcPr/w:vMerge[@w:val='restart'])=$restartindex+1]/w:tcPr/w:vMerge[not(@w:val='restart')])+1" />
-										
-									</xsl:if>
-
-									<!--  rowspan, using ms approach -->
-									<xsl:if
-										test="$rowSpanApproach='ms'
-												and w:tcPr/w:vMerge[@w:val='restart']">
-								
-										<xsl:variable name="vmerge" select="w:tcPr[1]/w:vMerge[1]" />
-									    <xsl:variable name="tblCount" select="count(ancestor::w:tbl)" />
-    									<xsl:variable name="me" select="." />									    
-    									<xsl:variable name="meInContext" select="ancestor::w:tr[1]/*[count($me|descendant-or-self::*)=count(descendant-or-self::*)]" />									    
-									    <xsl:variable name="before" 
-									    	select="count($meInContext/preceding-sibling::*[descendant-or-self::*[name()='w:tc' and (count(ancestor::w:tbl)=$tblCount)]])" />
-										
-										<xsl:variable name="rowspan">								
-								
-											<xsl:choose>
-												<xsl:when test="not($vmerge)">1</xsl:when>
-								
-												<xsl:otherwise>
-													<xsl:variable name="myRow" select="ancestor::w:tr[1]" />
-													<xsl:variable name="myRowInContext"
-														select="$myRow/ancestor::w:tbl[1]/*[count($myRow|descendant-or-self::*)=count(descendant-or-self::*)]" />
-								
-													<xsl:variable name="belowMe"
-														select="$myRowInContext/following-sibling::*//w:tc[count(ancestor::w:tbl)=$tblCount][$before + 1]" />
-								
-													<xsl:variable name="NextRestart"
-														select="($belowMe//w:tcPr/w:vMerge[@w:val='restart'])[1]" />
-													<xsl:variable name="NextRestartInContext"
-														select="$NextRestart/ancestor::w:tbl[1]/*[count($NextRestart|descendant-or-self::*)=count(descendant-or-self::*)]" />
-													<xsl:variable name="mergesAboveMe"
-														select="count($myRowInContext/preceding-sibling::*[(descendant-or-self::*[name()='w:tc'])[$before + 1][descendant-or-self::*[name()='w:vMerge']]])" />
-													<xsl:variable name="mergesAboveNextRestart"
-														select="count($NextRestartInContext/preceding-sibling::*[(descendant-or-self::*[name()='w:tc'])[$before + 1][descendant-or-self::*[name()='w:vMerge']]])" />
-								
-													<xsl:choose>
-														<xsl:when test="$NextRestart">
-															<xsl:value-of select="$mergesAboveNextRestart - $mergesAboveMe" />
-														</xsl:when>
-														<xsl:when test="$vmerge/@w:val">
-															<xsl:value-of
-																select="count($belowMe[descendant-or-self::*[name()='w:vMerge']]) + 1" />
-														</xsl:when>
-														<xsl:otherwise>1</xsl:otherwise>
-													</xsl:choose>
-												</xsl:otherwise>
-											</xsl:choose>
-										</xsl:variable>
-								
-										<xsl:if test="$vmerge">
-											<xsl:attribute name="rowspan">
-								            <xsl:value-of select="$rowspan" />
-								          </xsl:attribute>
-										</xsl:if>
-								
-									</xsl:if>
-									
+		<xsl:variable name="overrideColumn">
+			<xsl:choose>
+				<xsl:when test="not(preceding-sibling::w:tc)">
+					<xsl:copy-of select="tei:extrapolateTableFirstColumn(.)" />
+				</xsl:when>
+				<xsl:when test="not(following-sibling::w:tc)">
+					<xsl:copy-of select="tei:extrapolateTableLastColumn(.)" />
+				</xsl:when>
+			</xsl:choose>
+		</xsl:variable>
+		
+		<cell> <!--   foo="{count($overrideRow)}" -->
+		
+			<xsl:attribute name="rowSpanApproach" select="$rowSpanApproach" /> <!--  TEMP attribute -->
+			<xsl:if test="$preserveEffects='true'">
+				<xsl:attribute name="tei:align">
+				   <xsl:choose>
+				     <xsl:when test="w:p/w:pPr/w:jc">
+				     	<xsl:value-of select="w:p[1]/w:pPr/w:jc/@w:val" />
+				     </xsl:when>
+				     <xsl:when test="$overrideRow/w:pPr/w:jc">
+				<xsl:value-of select="$overrideRow/w:pPr/w:jc/@w:val" />
+				     </xsl:when>
+				     <xsl:when test="$overrideColumn/w:pPr/w:jc">
+				<xsl:value-of select="$overrideColumn/w:pPr/w:jc/@w:val" />
+				     </xsl:when>
+				     <xsl:otherwise>
+				<xsl:text>left</xsl:text>
+				     </xsl:otherwise>
+				   </xsl:choose>
+				 </xsl:attribute>
+			</xsl:if>
 			
-									<xsl:if test="w:tcPr/w:gridSpan">
-										<xsl:attribute name="cols" select="w:tcPr/w:gridSpan/@w:val" />
-									</xsl:if>
-									<xsl:variable name="val">
-										<xsl:value-of select="w:p[1]/w:pPr/w:pStyle/@w:val" />
-									</xsl:variable>
-									
-									<xsl:choose>
-										<xsl:when test="$val='[No Paragraph Style]'" />
-										<xsl:when test="$val='Table text (9)'" />
-										<xsl:when test="$val='Table Contents'" />
-										<xsl:when test="string-length($val)=0" />
-										<xsl:otherwise>
-											<xsl:attribute name="rend">
-																      <xsl:value-of select="replace($val,' ','_')" />
-																      <xsl:if
-												test="w:tcPr/w:shd/@w:fill and not(w:tcPr/w:shd/@w:fill='auto')">
-																	<xsl:text> background-color(</xsl:text>
-																	<xsl:value-of select="w:tcPr/w:shd/@w:fill" />
-																	<xsl:text>)</xsl:text>
-																      </xsl:if>
-																    </xsl:attribute>
-										</xsl:otherwise>
-									</xsl:choose>
-									
-									<xsl:if test="w:tcPr/w:gridSpan">
-										<xsl:attribute name="cols">
-								      <xsl:value-of select="w:tcPr/w:gridSpan/@w:val" />
-								    </xsl:attribute>
-									</xsl:if>
-									<xsl:call-template name="mainProcess">
-										<xsl:with-param name="extrarow" select="$overrideRow"
-											tunnel="yes" />
-										<xsl:with-param name="extracolumn" select="$overrideColumn"
-											tunnel="yes" />
-									</xsl:call-template>
-								</cell>
+			<!--  rowspan, using ottoville approach -->
+			<xsl:if test="$rowSpanApproach='ottoville'
+								and w:tcPr/w:vMerge[@w:val='restart']">
+			
+				<!-- Calculate cell index with combined cells -->
+				<!--  NB, per http://webapp.docx4java.org/OnlineDemo/ecma376/WordML/hMerge.html
+				
+				 	  hmerge is maintained for compatibility with legacy word processing documents which defined tables in this manner. 
+				 	  Whenever possible, this form or horizontal merges should not be produced, and should be translated to the appropriate 
+				 	  gridSpan settings on the table cells instead.
+				 	  
+				 	  So we might need to hmerge as well?
+				 -->
+				<xsl:variable name="celindex" 
+								select="count(current()/preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
+										+sum(current()/preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)" />
+				
+				<!-- How many combined rows have so far -->
+				<xsl:variable name="restartindex" 
+								select="count(current()/../preceding-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
+										+sum(current()/../preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex]/w:tcPr/w:vMerge[@w:val='restart'])" />
+				
+				<!-- Apply rowspan attribute -->
+				<xsl:attribute name="rows" 
+								select="count(current()/../following-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])
+										+sum(preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex][count(../preceding-sibling::w:tr/w:tc[count(preceding-sibling::w:tc[not(w:tcPr/w:gridSpan)])+sum(preceding-sibling::w:tc/w:tcPr/w:gridSpan/@w:val)=$celindex]/w:tcPr/w:vMerge[@w:val='restart'])=$restartindex+1]/w:tcPr/w:vMerge[not(@w:val='restart')])+1" />
+				
+			</xsl:if>
 
-</xsl:template>	
+			<!--  rowspan, using ms approach -->
+			<xsl:if
+				test="$rowSpanApproach='ms'
+						and w:tcPr/w:vMerge[@w:val='restart']">
+		
+				<xsl:variable name="vmerge" select="w:tcPr[1]/w:vMerge[1]" />
+			    <xsl:variable name="tblCount" select="count(ancestor::w:tbl)" />
+							<xsl:variable name="me" select="." />									    
+							<xsl:variable name="meInContext" select="ancestor::w:tr[1]/*[count($me|descendant-or-self::*)=count(descendant-or-self::*)]" />									    
+			    <xsl:variable name="before" 
+			    	select="count($meInContext/preceding-sibling::*[descendant-or-self::*[name()='w:tc' and (count(ancestor::w:tbl)=$tblCount)]])" />
+				
+				<xsl:variable name="rowspan">								
+		
+					<xsl:choose>
+						<xsl:when test="not($vmerge)">1</xsl:when>
+		
+						<xsl:otherwise>
+							<xsl:variable name="myRow" select="ancestor::w:tr[1]" />
+							<xsl:variable name="myRowInContext"
+								select="$myRow/ancestor::w:tbl[1]/*[count($myRow|descendant-or-self::*)=count(descendant-or-self::*)]" />
+		
+							<xsl:variable name="belowMe"
+								select="$myRowInContext/following-sibling::*//w:tc[count(ancestor::w:tbl)=$tblCount][$before + 1]" />
+		
+							<xsl:variable name="NextRestart"
+								select="($belowMe//w:tcPr/w:vMerge[@w:val='restart'])[1]" />
+							<xsl:variable name="NextRestartInContext"
+								select="$NextRestart/ancestor::w:tbl[1]/*[count($NextRestart|descendant-or-self::*)=count(descendant-or-self::*)]" />
+							<xsl:variable name="mergesAboveMe"
+								select="count($myRowInContext/preceding-sibling::*[(descendant-or-self::*[name()='w:tc'])[$before + 1][descendant-or-self::*[name()='w:vMerge']]])" />
+							<xsl:variable name="mergesAboveNextRestart"
+								select="count($NextRestartInContext/preceding-sibling::*[(descendant-or-self::*[name()='w:tc'])[$before + 1][descendant-or-self::*[name()='w:vMerge']]])" />
+		
+							<xsl:choose>
+								<xsl:when test="$NextRestart">
+									<xsl:value-of select="$mergesAboveNextRestart - $mergesAboveMe" />
+								</xsl:when>
+								<xsl:when test="$vmerge/@w:val">
+									<xsl:value-of
+										select="count($belowMe[descendant-or-self::*[name()='w:vMerge']]) + 1" />
+								</xsl:when>
+								<xsl:otherwise>1</xsl:otherwise>
+							</xsl:choose>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+		
+				<xsl:if test="$vmerge">
+					<xsl:attribute name="rowspan">
+		            <xsl:value-of select="$rowspan" />
+		          </xsl:attribute>
+				</xsl:if>
+		
+			</xsl:if>
+			
+
+			<xsl:if test="w:tcPr/w:gridSpan">
+				<xsl:attribute name="cols" select="w:tcPr/w:gridSpan/@w:val" />
+			</xsl:if>
+			<xsl:variable name="val">
+				<xsl:value-of select="w:p[1]/w:pPr/w:pStyle/@w:val" />
+			</xsl:variable>
+			
+			<xsl:choose>
+				<xsl:when test="$val='[No Paragraph Style]'" />
+				<xsl:when test="$val='Table text (9)'" />
+				<xsl:when test="$val='Table Contents'" />
+				<xsl:when test="string-length($val)=0" />
+				<xsl:otherwise>
+					<xsl:attribute name="rend">
+										      <xsl:value-of select="replace($val,' ','_')" />
+										      <xsl:if
+						test="w:tcPr/w:shd/@w:fill and not(w:tcPr/w:shd/@w:fill='auto')">
+											<xsl:text> background-color(</xsl:text>
+											<xsl:value-of select="w:tcPr/w:shd/@w:fill" />
+											<xsl:text>)</xsl:text>
+										      </xsl:if>
+										    </xsl:attribute>
+				</xsl:otherwise>
+			</xsl:choose>
+			
+			<xsl:if test="w:tcPr/w:gridSpan">
+				<xsl:attribute name="cols">
+		      <xsl:value-of select="w:tcPr/w:gridSpan/@w:val" />
+		    </xsl:attribute>
+			</xsl:if>
+			<xsl:call-template name="mainProcess">
+				<xsl:with-param name="extrarow" select="$overrideRow"
+					tunnel="yes" />
+				<xsl:with-param name="extracolumn" select="$overrideColumn"
+					tunnel="yes" />
+			</xsl:call-template>
+		</cell>
+
+	</xsl:template>	
 
 
 	<xsl:template match="*" mode="insideCalsTable">
