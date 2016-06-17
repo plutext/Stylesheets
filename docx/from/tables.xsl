@@ -117,7 +117,7 @@
 			<xsl:when test="$tableMethod='cals'"> <!-- not used? -->
 				<xsl:call-template name="cals-table" />
 			</xsl:when>
-			<xsl:otherwise> <!--  usual program flow -->
+			<xsl:otherwise> <!-- usual program flow -->
 				<table>
 					<xsl:call-template name="table-rendition" />
 					<xsl:call-template name="table-header" />
@@ -147,29 +147,30 @@
 								<cell>
 									<xsl:if test="$preserveEffects='true'">
 										<xsl:attribute name="tei:align">
-			    <xsl:choose>
-			      <xsl:when test="w:p/w:pPr/w:jc">
-			      	<xsl:value-of select="w:p[1]/w:pPr/w:jc/@w:val" />
-			      </xsl:when>
-			      <xsl:when test="$overrideRow/w:pPr/w:jc">
-				<xsl:value-of select="$overrideRow/w:pPr/w:jc/@w:val" />
-			      </xsl:when>
-			      <xsl:when test="$overrideColumn/w:pPr/w:jc">
-				<xsl:value-of select="$overrideColumn/w:pPr/w:jc/@w:val" />
-			      </xsl:when>
-			      <xsl:otherwise>
-				<xsl:text>left</xsl:text>
-			      </xsl:otherwise>
-			    </xsl:choose>
-			  </xsl:attribute>
+										   <xsl:choose>
+										     <xsl:when test="w:p/w:pPr/w:jc">
+										     	<xsl:value-of select="w:p[1]/w:pPr/w:jc/@w:val" />
+										     </xsl:when>
+										     <xsl:when test="$overrideRow/w:pPr/w:jc">
+										<xsl:value-of select="$overrideRow/w:pPr/w:jc/@w:val" />
+										     </xsl:when>
+										     <xsl:when test="$overrideColumn/w:pPr/w:jc">
+										<xsl:value-of select="$overrideColumn/w:pPr/w:jc/@w:val" />
+										     </xsl:when>
+										     <xsl:otherwise>
+										<xsl:text>left</xsl:text>
+										     </xsl:otherwise>
+										   </xsl:choose>
+										 </xsl:attribute>
 									</xsl:if>
-
+			
 									<xsl:if test="w:tcPr/w:gridSpan">
 										<xsl:attribute name="cols" select="w:tcPr/w:gridSpan/@w:val" />
 									</xsl:if>
 									<xsl:variable name="val">
 										<xsl:value-of select="w:p[1]/w:pPr/w:pStyle/@w:val" />
 									</xsl:variable>
+									
 									<xsl:choose>
 										<xsl:when test="$val='[No Paragraph Style]'" />
 										<xsl:when test="$val='Table text (9)'" />
@@ -177,20 +178,21 @@
 										<xsl:when test="string-length($val)=0" />
 										<xsl:otherwise>
 											<xsl:attribute name="rend">
-			      <xsl:value-of select="replace($val,' ','_')" />
-			      <xsl:if
+																      <xsl:value-of select="replace($val,' ','_')" />
+																      <xsl:if
 												test="w:tcPr/w:shd/@w:fill and not(w:tcPr/w:shd/@w:fill='auto')">
-				<xsl:text> background-color(</xsl:text>
-				<xsl:value-of select="w:tcPr/w:shd/@w:fill" />
-				<xsl:text>)</xsl:text>
-			      </xsl:if>
-			    </xsl:attribute>
+																	<xsl:text> background-color(</xsl:text>
+																	<xsl:value-of select="w:tcPr/w:shd/@w:fill" />
+																	<xsl:text>)</xsl:text>
+																      </xsl:if>
+																    </xsl:attribute>
 										</xsl:otherwise>
 									</xsl:choose>
+									
 									<xsl:if test="w:tcPr/w:gridSpan">
 										<xsl:attribute name="cols">
-			      <xsl:value-of select="w:tcPr/w:gridSpan/@w:val" />
-			    </xsl:attribute>
+								      <xsl:value-of select="w:tcPr/w:gridSpan/@w:val" />
+								    </xsl:attribute>
 									</xsl:if>
 									<xsl:call-template name="mainProcess">
 										<xsl:with-param name="extrarow" select="$overrideRow"
