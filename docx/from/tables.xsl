@@ -266,7 +266,7 @@
 				</xsl:variable>
 		
 				<xsl:if test="$vmerge">
-					<xsl:attribute name="rowspan">
+					<xsl:attribute name="rows">
 		            <xsl:value-of select="$rowspan" />
 		          </xsl:attribute>
 				</xsl:if>
