@@ -605,9 +605,17 @@ of this software, even if advised of the possibility of such damage.
     <xsl:template name="generate-section-heading">
         <xsl:param name="Style"/>
         <head>
+			<xsl:if
+				test="string($Style) and not($Style='Default' or $Style='Default Style')">
+				<xsl:attribute name="rend">
+				   <xsl:value-of select="$Style" />
+	 			</xsl:attribute>
+			</xsl:if>
 	  <xsl:apply-templates/>
         </head>
     </xsl:template>
+    
+    
     
 
     <xsl:template name="generateAppInfo">
