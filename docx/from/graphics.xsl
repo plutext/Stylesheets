@@ -107,8 +107,8 @@ of this software, even if advised of the possibility of such damage.
               </xsl:if>
             </graphic>
           </xsl:when>
-            <xsl:when test="@r:link">
-              <xsl:variable name="rid" select="@r:link"/>
+            <xsl:when test="descendant::a:blip[1]/@r:link">
+              <xsl:variable name="rid" select="descendant::a:blip[1]/@r:link"/>
 	      <graphic
 		  url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}">
 		<xsl:attribute name="rend">
@@ -137,6 +137,8 @@ of this software, even if advised of the possibility of such damage.
   <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
     <desc>Guides the identity transformation of blips</desc>
   </doc>
+  
+  
   <xsl:template match="a:blip" mode="iden">
     <a:blip>
       <xsl:choose>
