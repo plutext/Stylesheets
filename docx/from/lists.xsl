@@ -83,54 +83,62 @@ of this software, even if advised of the possibility of such damage.
         <xsl:variable name="level">
             <xsl:value-of select="number(w:pPr/w:numPr/w:ilvl/@w:val)"/>
         </xsl:variable>
-        <list>
-	  <xsl:call-template name="listType"/>
-	  <xsl:for-each-group select="current-group()"
-			      group-adjacent="if
+        
+	<list>
+		<xsl:call-template name="listType" />
+		<xsl:for-each-group select="current-group()"
+			group-adjacent="if
 					      (w:pPr/w:numPr/w:ilvl/@w:val  &gt; $level) then 1
 					      else if(w:pPr/w:pStyle/@w:val=$type)  then 0 
 					      else if(w:pPr/w:pStyle/@w:val='Note') then 0                 
 					      else if(w:pPr/w:pStyle/@w:val='dl') then 1                
 					      else 0">
-	    <xsl:choose>
-	      <!-- we are still on the same level -->
-	      <xsl:when test="current-grouping-key()=0">
-		<xsl:for-each select="current-group()">
-		  <!-- put items and notes as siblings  for now -->
-		  <xsl:choose>
-		    <xsl:when test="tei:is-list(.)">
-		      <item>
-			<xsl:apply-templates/>
-		      </item>
-		    </xsl:when>
-		    <xsl:otherwise>
-		      <xsl:apply-templates select="." mode="paragraph"/>
-		    </xsl:otherwise>
-		  </xsl:choose>
-		</xsl:for-each>
-	      </xsl:when>
-	      <xsl:otherwise>
-		<xsl:call-template name="listSection"/>
-	      </xsl:otherwise>
-	    </xsl:choose>
-	    
-	  </xsl:for-each-group>
-        </list>
+			<xsl:choose>
+				<!-- we are still on the same level -->
+				<xsl:when test="current-grouping-key()=0">
+					<xsl:for-each select="current-group()">
+						<!-- put items and notes as siblings for now -->
+						<xsl:choose>
+							<xsl:when test="tei:is-list(.)">
+								<item>
+									<xsl:apply-templates />
+								</item>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:apply-templates select="." mode="paragraph" />
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:for-each>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:call-template name="listSection" />
+				</xsl:otherwise>
+			</xsl:choose>
+
+		</xsl:for-each-group>
+	</list>
     </xsl:template>
     
     <!--
         Trying to figure out the style of a list.
     -->
     <xsl:template name="listType">
+    
         <xsl:variable name="style">
             <xsl:value-of select="w:pPr/w:pStyle/@w:val"/>
         </xsl:variable>
+        <xsl:attribute name="rend">
+        	<xsl:value-of select="$style"/>
+        </xsl:attribute>
+
+
         <xsl:variable name="type" select="tei:get-listtype($style)"/>
         
-        <xsl:attribute name="type">
             <xsl:choose>
                 <xsl:when test="string-length($type) &gt; 0">
-                    <xsl:value-of select="$type"/>
+			        <xsl:attribute name="type">
+            	        <xsl:value-of select="$type"/>
+            	     </xsl:attribute>
                 </xsl:when>
                 
                 <!-- try to figure it out by looking at the corresponding numbering file -->
@@ -155,12 +163,24 @@ of this software, even if advised of the possibility of such damage.
                             <xsl:when test="w:pPr/w:numPr/w:ilvl/@w:val">
                                 <xsl:value-of select="w:pPr/w:numPr/w:ilvl/@w:val"/>
                             </xsl:when>
+                            <xsl:when test="w:pPr/w:numPr">0</xsl:when>
                             <xsl:otherwise>
-                                <!-- we might want to follow the basedOn reference, but not at the moment -->
-                                <xsl:value-of select="document($styleDoc)//w:style[w:name/@w:val=$style]/w:pPr/w:numPr/w:ilvl/@w:val"/>
+                                <!-- we might want to follow the basedOn reference, but not implemented yet -->
+		                        <xsl:choose>
+		                        	<xsl:when test="document($styleDoc)//w:style[w:name/@w:val=$style]/w:pPr/w:numPr/w:ilvl">
+		                                <xsl:value-of select="document($styleDoc)//w:style[w:name/@w:val=$style]/w:pPr/w:numPr/w:ilvl/@w:val"/>
+		                        	</xsl:when>
+		                        	<xsl:when test="document($styleDoc)//w:style[w:name/@w:val=$style]/w:pPr/w:numPr">0</xsl:when>
+		                            <xsl:otherwise/>
+		                        </xsl:choose>
                             </xsl:otherwise>
                         </xsl:choose>
                     </xsl:variable>
+                    
+			        <xsl:attribute name="ilvl">
+			            <xsl:value-of select="$numbering-level"/>
+					</xsl:attribute>
+                    
                     
                     <!-- find the abstract numbering definition and then the corresponding numfmt -->
                     <xsl:variable name="abstract-def"
@@ -169,17 +189,22 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:value-of select="document($numberFile)//w:abstractNum[@w:abstractNumId=$abstract-def]/w:lvl[@w:ilvl=$numbering-level]/w:numFmt/@w:val"/>
                     </xsl:variable>
                     
+		        <xsl:attribute name="numFmt">
+		            <xsl:value-of select="$numfmt"/>
+				</xsl:attribute>
                     
                     <!-- figure out what numbering scheme to use -->
-                    <xsl:choose>
-		        <xsl:when test="$style='dl'">gloss</xsl:when>
-                        <xsl:when test="string-length($numfmt)=0">unordered</xsl:when>
-                        <xsl:when test="$numfmt='bullet'">unordered</xsl:when>
-                        <xsl:otherwise>ordered</xsl:otherwise>
-                    </xsl:choose>
-                </xsl:otherwise>
+			        <xsl:attribute name="type">
+	                    <xsl:choose>
+					        <xsl:when test="$style='dl'">gloss</xsl:when>
+	                        <xsl:when test="string-length($numfmt)=0">unordered</xsl:when>
+	                        <xsl:when test="$numfmt='bullet'">unordered</xsl:when>
+	                        <xsl:otherwise>ordered</xsl:otherwise>
+			             </xsl:choose>
+            	     </xsl:attribute>
+		             
+		         </xsl:otherwise>
             </xsl:choose>
-        </xsl:attribute>
     </xsl:template>
     
     
