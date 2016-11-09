@@ -174,40 +174,43 @@ of this software, even if advised of the possibility of such damage.
 	
       </desc>
    </doc>
-   <xsl:template match="/">
-     <!-- Do an initial normalization and store everything in $pass0 -->
-      <xsl:if test="not(doc-available($relsFile))">
-	<xsl:message terminate="yes">The file <xsl:value-of
-	select="$relsFile"/> cannot be read</xsl:message>
-      </xsl:if>
-      <xsl:if test="not(doc-available($styleDoc))">
-	<xsl:message terminate="yes">The file <xsl:value-of
-	select="$styleDoc"/> cannot be read</xsl:message>
-      </xsl:if>
-     <xsl:variable name="pass0">
-       <xsl:apply-templates mode="pass0"/>
-     </xsl:variable>
-     
-     <!-- Do the main transformation and store everything in the variable pass1 -->
-     <xsl:variable name="pass1">
-       <xsl:for-each select="$pass0">
-	 <xsl:apply-templates/>
-       </xsl:for-each>
-     </xsl:variable>		  
-     
+	<xsl:template match="/">
+		<!-- Do an initial normalization and store everything in $pass0 -->
+		<xsl:if test="not(doc-available($relsFile))">
+			<xsl:message terminate="yes">
+				The file
+				<xsl:value-of select="$relsFile" />
+				cannot be read
+			</xsl:message>
+		</xsl:if>
+		<xsl:if test="not(doc-available($styleDoc))">
+			<xsl:message terminate="yes">
+				The file
+				<xsl:value-of select="$styleDoc" />
+				cannot be read
+			</xsl:message>
+		</xsl:if>
+		<xsl:variable name="pass0">
+			<xsl:apply-templates mode="pass0" />
+		</xsl:variable>
 
-     <!--
-	 <xsl:result-document href="/tmp/foo.xml">
-	 <xsl:copy-of select="$pass1"/>
-	 </xsl:result-document>
-     -->
+		<!-- Do the main transformation and store everything in the variable pass1 -->
+		<xsl:variable name="pass1">
+			<xsl:for-each select="$pass0">
+				<xsl:apply-templates />
+			</xsl:for-each>
+		</xsl:variable>
 
-     <!-- Do the final parse and create valid TEI -->
 
-     <xsl:apply-templates select="$pass1" mode="pass2"/>
-     
-     <xsl:call-template name="fromDocxFinalHook"/>
-   </xsl:template>
+		<!-- <xsl:result-document href="/tmp/foo.xml"> <xsl:copy-of select="$pass1"/> 
+			</xsl:result-document> -->
+
+		<!-- Do the final parse and create valid TEI -->
+
+		<xsl:apply-templates select="$pass1" mode="pass2" />
+
+		<xsl:call-template name="fromDocxFinalHook" />
+	</xsl:template>
    
    <xsl:template name="fromDocxFinalHook"/>
    
@@ -275,7 +278,8 @@ of this software, even if advised of the possibility of such damage.
 		     front matter paragraps. We can simply convert them without further
 		     trying to split them up into sub sections. -->
 		<xsl:otherwise>
-		  <xsl:apply-templates select="." mode="inSectionGroup"/>
+		  <!-- <xsl:apply-templates select="." mode="inSectionGroup"/> -->
+		  <xsl:call-template name="blockGrouper" />
 		</xsl:otherwise>
 	      </xsl:choose>
 	    </xsl:for-each-group>
@@ -336,6 +340,11 @@ of this software, even if advised of the possibility of such damage.
       </desc>
 	  </doc>
 	  <xsl:template match="w:sdt|w:tbl|w:p" mode="inSectionGroup">
+	  	<xsl:call-template name="blockGrouper"  />
+	  </xsl:template>
+
+
+	  <xsl:template name="blockGrouper">
 	    
 	    <!-- 
 		 We are looking for:
@@ -361,7 +370,10 @@ of this software, even if advised of the possibility of such damage.
 		   paragraph -->
 	      <xsl:choose>
 		<xsl:when test="current-grouping-key()=1">
-		  <xsl:call-template name="listSection"/>
+		  <!-- <xsl:comment><xsl:value-of select="local-name(.)"/> x <xsl:value-of select="count(current-group())"/></xsl:comment>  -->
+		  <xsl:call-template name="listSection">
+										<xsl:with-param name="items" select="current-group()"/>
+</xsl:call-template>		  
 		</xsl:when>
 		<xsl:when test="current-grouping-key()=2">
 		  <xsl:call-template name="tocSection"/>
@@ -448,29 +460,31 @@ of this software, even if advised of the possibility of such damage.
       <desc>Groups the document by headings and thereby creating the document structure. 
       </desc>
    </doc>
-   <xsl:template name="group-by-section">
-     <xsl:variable name="Style" select="w:pPr/w:pStyle/@w:val"/>
-     <xsl:variable name="NextHeader" select="tei:get-nextlevel-header($Style)"/>
-     <div>
-       <!-- generate the head -->
-       <xsl:call-template name="generate-section-heading">
-	 <xsl:with-param name="Style" select="$Style"/>
-       </xsl:call-template>
+	<xsl:template name="group-by-section">
+		<xsl:variable name="Style" select="w:pPr/w:pStyle/@w:val" />
+		<xsl:variable name="NextHeader" select="tei:get-nextlevel-header($Style)" />
+		<div>
+			<!-- generate the head -->
+			<xsl:call-template name="generate-section-heading">
+				<xsl:with-param name="Style" select="$Style" />
+			</xsl:call-template>
 
-       <!-- Process sub-sections -->
-       <xsl:for-each-group select="current-group() except ."
-			   group-starting-with="w:p[w:pPr/w:pStyle/@w:val=$NextHeader]">
-	 <xsl:choose>
-	   <xsl:when test="tei:is-heading(.)">
-	     <xsl:call-template name="group-by-section"/>
-	   </xsl:when>
-	   <xsl:otherwise>
-	     <xsl:apply-templates select="." mode="inSectionGroup"/>
-	   </xsl:otherwise>
-	 </xsl:choose>
-       </xsl:for-each-group>
-     </div>
-   </xsl:template>
+			<!-- Process sub-sections -->
+			<xsl:for-each-group select="current-group() except ."
+				group-starting-with="w:p[w:pPr/w:pStyle/@w:val=$NextHeader]">
+				<xsl:choose>
+					<xsl:when test="tei:is-heading(.)">
+						<xsl:call-template name="group-by-section" />
+					</xsl:when>
+					<xsl:otherwise>
+						  <!-- <xsl:apply-templates select="." mode="inSectionGroup"/> -->
+						  <xsl:call-template name="blockGrouper"  />
+						
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:for-each-group>
+		</div>
+	</xsl:template>
    
 
    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">

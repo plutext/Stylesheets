@@ -104,14 +104,14 @@ of this software, even if advised of the possibility of such damage.
       <desc>Defines whether or not a word paragraph is a list element.</desc></doc>
     <xsl:function name="tei:is-list" as="xs:boolean">
         <xsl:param name="p"/>    
-	<xsl:variable name="style" select="$p/w:pPr/w:pStyle/@w:val"/>
-	<xsl:variable name="stylePr"
-		      select="document($styleDoc)//w:style[w:name/@w:val=$style]"/>
+		<xsl:variable name="pStyleVal" select="$p/w:pPr/w:pStyle/@w:val"/>
+		<xsl:variable name="stylePr"
+			      select="document($styleDoc)//w:style[@w:styleId=$pStyleVal]"/>
         <xsl:choose>
-            <xsl:when test="$p/w:pPr/w:pStyle/@w:val='dl'">true</xsl:when>
-	    <xsl:when test="$p/w:pPr/w:numPr/w:ilvl">true</xsl:when>
-	    <xsl:when test="contains($style,'List') and $p/w:pPr/w:numPr[not(w:ins)]">true</xsl:when>
-            <xsl:when test="contains($style,'List') and $stylePr/w:pPr/w:numPr[not(w:ins)]">true</xsl:when>
+            <xsl:when test="$pStyleVal='dl'">true</xsl:when>
+		    <xsl:when test="$p/w:pPr/w:numPr">true</xsl:when>
+		    <xsl:when test="contains($pStyleVal,'List') and $p/w:pPr/w:numPr[not(w:ins)]">true</xsl:when>
+            <xsl:when test="contains($pStyleVal,'List') and $stylePr/w:pPr/w:numPr[not(w:ins)]">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -177,7 +177,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:value-of select="translate($current-header,'12345678','23456789')"/>
     </xsl:function>
     
-
+<!-- 
         <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
       <desc>Returns a listtype for a given stylename (return empty string to figure it out dynamically).</desc></doc>
 
@@ -204,7 +204,7 @@ of this software, even if advised of the possibility of such damage.
             </xsl:otherwise>
         </xsl:choose>
     </xsl:function>
-
+ -->
 
         <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
       <desc>insert a note that a docx conversion cannot proceed</desc></doc>

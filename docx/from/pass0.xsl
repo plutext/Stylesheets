@@ -98,7 +98,8 @@ of this software, even if advised of the possibility of such damage.
 
   <xsl:template match="w:pStyle/@w:val|w:rStyle/@w:val" mode="pass0">
       <xsl:attribute name="w:val">
-	<xsl:value-of select="tei:getWordStyleName(.)"/>
+	<!-- <xsl:value-of select="tei:getWordStyleName(.)"/> -->
+		<xsl:value-of select="."/>
       </xsl:attribute>
   </xsl:template>
 
@@ -109,6 +110,7 @@ of this software, even if advised of the possibility of such damage.
 		       not(parent::w:r/w:footnoteReference)]" mode="pass0">
   </xsl:template>
 
+<!-- 
   <xsl:function name="tei:getWordStyleName">
     <xsl:param name="val"/>
     <xsl:for-each select="document($styleDoc)">
@@ -122,5 +124,6 @@ of this software, even if advised of the possibility of such damage.
       </xsl:choose>
     </xsl:for-each>
   </xsl:function>
-
+ -->
+ 
 </xsl:stylesheet>
