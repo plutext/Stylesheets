@@ -87,54 +87,56 @@ of this software, even if advised of the possibility of such damage.
         </p>
       </desc>
    </doc>
-    <xsl:template match="w:p" mode="paragraph">
-      <xsl:variable name="style" select="w:pPr/w:pStyle/@w:val"/>
-      <xsl:choose>
-	<xsl:when test="$style='tei_lg'"/>
-	<xsl:when test="$style='GeneratedTitle'"/>
-	<xsl:when test="$style='GeneratedSubTitle'"/>
 
-       <xsl:when test="starts-with($style,'tei_')">
-	 <xsl:element name="{substring($style,5)}">
-	    <xsl:apply-templates/>
-	 </xsl:element>
-       </xsl:when>
 
-       <xsl:when test="starts-with($style,'TEI ')">
-	 <xsl:element name="{substring($style,5)}">
-	    <xsl:apply-templates/>
-	 </xsl:element>
-       </xsl:when>
+	<xsl:template match="w:p" mode="paragraph">
+		<xsl:variable name="style" select="w:pPr/w:pStyle/@w:val" />
+		<xsl:choose>
+			<xsl:when test="$style='tei_lg'" />
+			<xsl:when test="$style='GeneratedTitle'" />
+			<xsl:when test="$style='GeneratedSubTitle'" />
 
-	<xsl:when test="$style='Tabletitle'">
-	  <head>
-	    <xsl:apply-templates/>
-	  </head>
-	</xsl:when>
+			<xsl:when test="starts-with($style,'tei_')">
+				<xsl:element name="{substring($style,5)}">
+					<xsl:apply-templates />
+				</xsl:element>
+			</xsl:when>
 
-	<xsl:when test="$style='dl'">
-	  <GLOSSITEM>
-	    <xsl:apply-templates/>
-	  </GLOSSITEM>
-	</xsl:when>
-	<xsl:otherwise>
-		<!-- For unknown reason style name sometimes is enclosed with &lt; &gt; -->
-		<xsl:variable name="st">
-			<xsl:choose>
-				<xsl:when test="substring($style, 1, 1)='&lt;'">
-					<xsl:value-of select="substring($style, 2, string-length($style)-2)"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:value-of select="$style"/>
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<xsl:call-template name="paragraph-wp">
-	    <xsl:with-param name="style" select="$st"/>
-	  </xsl:call-template>
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:template>
+			<xsl:when test="starts-with($style,'TEI ')">
+				<xsl:element name="{substring($style,5)}">
+					<xsl:apply-templates />
+				</xsl:element>
+			</xsl:when>
+
+			<xsl:when test="$style='Tabletitle'">
+				<head>
+					<xsl:apply-templates />
+				</head>
+			</xsl:when>
+
+			<xsl:when test="$style='dl'">
+				<GLOSSITEM>
+					<xsl:apply-templates />
+				</GLOSSITEM>
+			</xsl:when>
+			<xsl:otherwise>
+				<!-- For unknown reason style name sometimes is enclosed with &lt; &gt; -->
+				<xsl:variable name="st">
+					<xsl:choose>
+						<xsl:when test="substring($style, 1, 1)='&lt;'">
+							<xsl:value-of select="substring($style, 2, string-length($style)-2)" />
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="$style" />
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<xsl:call-template name="paragraph-wp">
+					<xsl:with-param name="style" select="$st" />
+				</xsl:call-template>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
     
 	<doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
 		<desc>Named template to retrieve the formatting from named Word style to make into TEI style attribute elsewhere.</desc>
@@ -167,14 +169,15 @@ of this software, even if advised of the possibility of such damage.
        use the Word style (if provided) to make a TEI rend attribute,
        and check for change records.</desc>
    </doc>
-   <xsl:template name="paragraph-wp">
-   	<xsl:param name="style"/>
-   	<xsl:element name="p">
-       <xsl:if test="string($style) and not($style='Default' or $style='Default Style')">
-	 <xsl:attribute name="rend">
-	   <xsl:value-of select="$style"/>
-	 </xsl:attribute>
-       </xsl:if>
+	<xsl:template name="paragraph-wp">
+		<xsl:param name="style" />
+		<xsl:element name="p">
+			<xsl:if
+				test="string($style) and not($style='Default' or $style='Default Style')">
+				<xsl:attribute name="rend">
+				   <xsl:value-of select="$style" />
+	 			</xsl:attribute>
+			</xsl:if>
        <xsl:variable name="retrievedStyles">
          <!-- Do we want to preserve word styles? -->
          <xsl:if test="$preserveEffects='true' and not(normalize-space($style)='')">
