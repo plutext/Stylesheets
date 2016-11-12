@@ -278,7 +278,7 @@
 				<xsl:attribute name="cols" select="w:tcPr/w:gridSpan/@w:val" />
 			</xsl:if>
 			<xsl:variable name="val">
-				<xsl:value-of select="w:p[1]/w:pPr/w:pStyle/@w:val" />
+				<xsl:value-of select="w:p[1]/w:pPr/w:pStyle/@tei:name" />
 			</xsl:variable>
 			
 			<xsl:choose>
@@ -427,7 +427,7 @@
 	</xsl:template>
 
 	<xsl:template match="w:p" mode="inTable">
-		<p rend="{w:pPr/w:pStyle/@w:val}">
+		<p rend="{w:pPr/w:pStyle/@tei:name}">
 			<xsl:apply-templates />
 		</p>
 	</xsl:template>
@@ -459,7 +459,7 @@
 
 	<xsl:template name="table-header">
 		<xsl:variable name="precedingTableTitle"
-			select="preceding-sibling::w:p[w:pPr/w:pStyle/@w:val='TableTitle'             or w:pPr/w:pStyle/@w:val=$Tabletitle][1]" />
+			select="preceding-sibling::w:p[w:pPr/w:pStyle/@tei:name='Table Title'             or w:pPr/w:pStyle/@tei:name=$Tabletitle][1]" />
 		<xsl:if
 			test="$precedingTableTitle and $precedingTableTitle/following-sibling::w:tbl[1] and generate-id()=generate-id($precedingTableTitle/following-sibling::w:tbl[1])">
 			<head>
@@ -470,7 +470,7 @@
 
 	<xsl:template name="cals-table-header">
 		<xsl:variable name="precedingTableTitle"
-			select="preceding-sibling::w:p[w:pPr/w:pStyle/@w:val='TableTitle'             or w:pPr/w:pStyle/@w:val=$Tabletitle][1]" />
+			select="preceding-sibling::w:p[w:pPr/w:pStyle/@tei:name='Table Title'             or w:pPr/w:pStyle/@tei:name=$Tabletitle][1]" />
 		<xsl:if
 			test="$precedingTableTitle and $precedingTableTitle/following-sibling::w:tbl[1] and generate-id()=generate-id($precedingTableTitle/following-sibling::w:tbl[1])">
 			<title xmlns="http://www.oasis-open.org/specs/tm9901">

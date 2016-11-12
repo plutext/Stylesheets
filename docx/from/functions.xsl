@@ -68,7 +68,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:param name="p"/>
         
         <xsl:choose>
-            <xsl:when test="matches($p/w:pPr/w:pStyle/@w:val,'[Hh]eading[ ]?1')">true</xsl:when>
+            <xsl:when test="matches($p/w:pPr/w:pStyle/@tei:name,'[Hh]eading[ ]?1')">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -77,7 +77,7 @@ of this software, even if advised of the possibility of such damage.
       <desc>Defines whether or not a word paragraph is a  heading.</desc></doc>
     <xsl:function name="tei:is-heading" as="xs:boolean">
         <xsl:param name="p"/>
-	<xsl:variable name="s" select="$p/w:pPr/w:pStyle/@w:val"/>
+	<xsl:variable name="s" select="$p/w:pPr/w:pStyle/@tei:name"/>
         <xsl:choose>
             <xsl:when test="matches($s,'[Hh]eading.+')">true</xsl:when>
             <xsl:when test="matches($s,'[Cc]aption')">true</xsl:when>
@@ -90,7 +90,7 @@ of this software, even if advised of the possibility of such damage.
         <desc>Defines whether or not a word paragraph is a front page element.</desc></doc>
     <xsl:function name="tei:is-front" as="xs:boolean">
         <xsl:param name="p"/>
-        <xsl:variable name="s" select="$p/w:pPr/w:pStyle/@w:val"/>
+        <xsl:variable name="s" select="$p/w:pPr/w:pStyle/@tei:name"/>
         <xsl:choose>
             <xsl:when test="matches($s,'[Tt]itle.*')">true</xsl:when>
             <xsl:when test="matches($s,'[Ss]ubtitle.*')">true</xsl:when>
@@ -121,8 +121,8 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:is-toc" as="xs:boolean">
         <xsl:param name="p"/>        
         <xsl:choose>
-            <xsl:when test="$p[contains(w:pPr/w:pStyle/@w:val,'toc')]">true</xsl:when>
-            <xsl:when test="$p[contains(w:pPr/w:pStyle/@w:val,'TOC')]">true</xsl:when>
+            <xsl:when test="$p[contains(w:pPr/w:pStyle/@tei:name,'toc')]">true</xsl:when>
+            <xsl:when test="$p[contains(w:pPr/w:pStyle/@tei:name,'TOC')]">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -132,7 +132,7 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:is-figure" as="xs:boolean">
         <xsl:param name="p"/>        
         <xsl:choose>
-            <xsl:when test="$p[matches(w:pPr/w:pStyle/@w:val,'[Ff]igure')]">true</xsl:when>
+            <xsl:when test="$p[matches(w:pPr/w:pStyle/@tei:name,'[Ff]igure')]">true</xsl:when>
             <xsl:when test="$p[w:r/w:drawing and not(w:r/w:t)]">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
@@ -143,8 +143,8 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:is-caption" as="xs:boolean">
         <xsl:param name="p"/>        
         <xsl:choose>
-            <xsl:when test="$p[matches(w:pPr/w:pStyle/@w:val,'[Cc]aption')]">true</xsl:when>
-            <xsl:when test="$p[matches(w:pPr/w:pStyle/@w:val,'Figuretitle')]">true</xsl:when>
+            <xsl:when test="$p[matches(w:pPr/w:pStyle/@tei:name,'[Cc]aption')]">true</xsl:when>
+            <xsl:when test="$p[matches(w:pPr/w:pStyle/@tei:name,'Figuretitle')]">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -155,7 +155,7 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:is-line" as="xs:boolean">
         <xsl:param name="p"/>        
         <xsl:choose>
-            <xsl:when test="$p[w:pPr/w:pStyle/@w:val='tei_l']">true</xsl:when>
+            <xsl:when test="$p[w:pPr/w:pStyle/@tei:name='tei_l']">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -165,7 +165,7 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:is-glosslist" as="xs:boolean">
         <xsl:param name="p"/>        
         <xsl:choose>
-            <xsl:when test="$p[w:pPr/w:pStyle/@w:val='dl']">true</xsl:when>
+            <xsl:when test="$p[w:pPr/w:pStyle/@tei:name='dl']">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>

@@ -90,7 +90,7 @@ of this software, even if advised of the possibility of such damage.
 
 
 	<xsl:template match="w:p" mode="paragraph">
-		<xsl:variable name="style" select="w:pPr/w:pStyle/@w:val" />
+		<xsl:variable name="style" select="w:pPr/w:pStyle/@tei:name" />
 		<xsl:choose>
 			<xsl:when test="$style='tei_lg'" />
 			<xsl:when test="$style='GeneratedTitle'" />

@@ -76,7 +76,7 @@ of this software, even if advised of the possibility of such damage.
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
       <desc>Handles a single paragraph that contains a math object</desc>
    </doc>
-    <xsl:template match="w:p[w:pPr/w:pStyle/@w:val='Formula']" mode="paragraph">
+    <xsl:template match="w:p[w:pPr/w:pStyle/@tei:name='Formula']" mode="paragraph">
         <xsl:call-template name="paragraph-formula"/>
     </xsl:template>
     

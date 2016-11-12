@@ -461,7 +461,7 @@ of this software, even if advised of the possibility of such damage.
       </desc>
    </doc>
 	<xsl:template name="group-by-section">
-		<xsl:variable name="Style" select="w:pPr/w:pStyle/@w:val" />
+		<xsl:variable name="Style" select="w:pPr/w:pStyle/@tei:name" />
 		<xsl:variable name="NextHeader" select="tei:get-nextlevel-header($Style)" />
 		<div>
 			<!-- generate the head -->
@@ -471,7 +471,7 @@ of this software, even if advised of the possibility of such damage.
 
 			<!-- Process sub-sections -->
 			<xsl:for-each-group select="current-group() except ."
-				group-starting-with="w:p[w:pPr/w:pStyle/@w:val=$NextHeader]">
+				group-starting-with="w:p[w:pPr/w:pStyle/@tei:name=$NextHeader]">
 				<xsl:choose>
 					<xsl:when test="tei:is-heading(.)">
 						<xsl:call-template name="group-by-section" />
