@@ -47,7 +47,9 @@ of this software, even if advised of the possibility of such damage.
     <xsl:choose>
       <xsl:when test="v:shape/v:imagedata">
         <xsl:variable name="rid" select="v:shape/v:imagedata/@r:id"/>
-        <graphic url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}"/>
+        <graphic url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}">
+          <desc><xsl:value-of select="document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target"/></desc>
+        </graphic>
       </xsl:when>
       <xsl:otherwise>
         <xsl:sequence select="tei:docxError('unable to handle image')"/>
