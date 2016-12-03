@@ -43,6 +43,20 @@ of this software, even if advised of the possibility of such damage.
   <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
     <desc>Convert Word drawing objects</desc>
   </doc>
+  <xsl:template match="w:pict">
+    <xsl:choose>
+      <xsl:when test="v:shape/v:imagedata">
+        <xsl:variable name="rid" select="v:shape/v:imagedata/@r:id"/>
+        <graphic url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}">
+          <desc><xsl:value-of select="document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target"/></desc>
+        </graphic>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:sequence select="tei:docxError('unable to handle image')"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
   <xsl:template match="w:drawing">
     <xsl:param name="n" tunnel="yes"/>
     <xsl:choose>
@@ -54,6 +68,22 @@ of this software, even if advised of the possibility of such damage.
 	  <xsl:when test="matches($target,'\.emf$') or   matches($target,'\.wmf$')">
             <xsl:sequence select="tei:docxError(concat('unable to handle  picture of Windows format ',$target))"/>
 	  </xsl:when>
+          <xsl:when test="descendant::a:blip[1]/@r:link">
+            <xsl:variable name="rid" select="descendant::a:blip[1]/@r:link"/>
+            <graphic url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}">
+              <xsl:attribute name="rend">
+                <xsl:choose>
+                  <xsl:when test="wp:anchor">block</xsl:when>
+                  <xsl:otherwise>inline</xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:if test=".//wp:docPr/@descr">
+                <xsl:element name="desc">
+                  <xsl:value-of select=".//wp:docPr/@descr"/>
+                </xsl:element>
+              </xsl:if>
+            </graphic>
+          </xsl:when>
           <xsl:when test="descendant::a:blip[1]/@r:embed">
             <graphic>
               <xsl:variable name="c">
@@ -107,23 +137,6 @@ of this software, even if advised of the possibility of such damage.
               </xsl:if>
             </graphic>
           </xsl:when>
-            <xsl:when test="descendant::a:blip[1]/@r:link">
-              <xsl:variable name="rid" select="descendant::a:blip[1]/@r:link"/>
-	      <graphic
-		  url="{document(concat($wordDirectory,'/word/_rels/document.xml.rels'))//rel:Relationship[@Id=$rid]/@Target}">
-		<xsl:attribute name="rend">
-                  <xsl:choose>
-                    <xsl:when test="wp:anchor">block</xsl:when>
-                    <xsl:otherwise>inline</xsl:otherwise>
-                  </xsl:choose>
-		</xsl:attribute>
-		<xsl:if test=".//wp:docPr/@descr">
-                  <xsl:element name="desc">
-                    <xsl:value-of select=".//wp:docPr/@descr"/>
-                  </xsl:element>
-		</xsl:if>
-	      </graphic>
-            </xsl:when>
             <xsl:otherwise>
               <xsl:sequence select="tei:docxError('unable to handle picture here, no embed or link')"/>
             </xsl:otherwise>

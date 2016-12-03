@@ -133,7 +133,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:param name="p"/>        
         <xsl:choose>
             <xsl:when test="$p[matches(w:pPr/w:pStyle/@tei:name,'[Ff]igure')]">true</xsl:when>
-            <xsl:when test="$p[w:r/w:drawing and not(w:r/w:t)]">true</xsl:when>
+            <xsl:when test="$p[(w:r/w:drawing or w:r/w:pict) and not(w:r/w:t)]">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:function>
@@ -209,12 +209,11 @@ of this software, even if advised of the possibility of such damage.
         <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
       <desc>insert a note that a docx conversion cannot proceed</desc></doc>
     <xsl:function name="tei:docxError" as="node()+">
-      <xsl:param name="message"/>
-      <hi xmlns="http://www.tei-c.org/ns/1.0" 
-	  style="color:red; font-size: 14pt; font-weight:bold;" rend="ERROR">&#xFFFD;</hi><note place="margin" type="conversion" resp="#teitodocx" xmlns="http://www.tei-c.org/ns/1.0" >
-	<hi rend="docxError"><xsl:value-of select="$message"/></hi>
-      </note>
-      <xsl:message>docx conversion issue: <xsl:value-of select="$message"/></xsl:message>
+        <xsl:param name="message"/>
+        <hi xmlns="http://www.tei-c.org/ns/1.0" rend="ERROR">
+            <xsl:value-of select="$message"/>
+        </hi>
+        <xsl:message>docx conversion issue: <xsl:value-of select="$message"/></xsl:message>
     </xsl:function>
 
 
